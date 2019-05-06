@@ -55,6 +55,7 @@ The server ***shall***
 7. Accept up to `MaxPlayers` players; if a player exits or quits the game, it can neither rejoin nor be replaced.
 8. Accept up to 1 spectator; if a new spectator joins while one is active, the server shall tell the current spectator to quit, and the server shall then forget that current spectator.
 7. React to each type of inbound message as described in the [protocol](#networkprotocol) below.
+8. Update all clients whenever any player moves or gold is collected.
 8. Monitor the number of gold nuggets remaining; when it reaches zero, the server shall send a `GAMEOVER` message to all clients, print the Game-over summary, and exit.
 
 The server ***should*** log useful information that can be saved in a logfile;
@@ -78,6 +79,7 @@ The player ***shall***
 6. Upon receipt of a `GRID` message, check whether the window is large enough for the grid (it should be *NR+1* x *NC+1* for best results).
 7. Display a status line on the first line of the display, in the [protocol](#networkprotocol) below.
 8. Display the game grid on the subsequent lines of the display, as noted in the [protocol](#networkprotocol) below.
+9. Update the display any time new information arrives from the server.
 9. Quit when told to do so by the server, as noted in the [protocol](#networkprotocol) below.
 10. Quit if reaching EOF on stdin.
 10. Print a Game-over summary and exit, as noted in the [protocol](#networkprotocol) below.
@@ -270,6 +272,10 @@ The client sends, at any time,
 	KEY k
 	
 where k is the single-character keystroke typed by the user.
+
+When the player's keystroke causes them to collect gold, the server shall inform all clients using a `GOLD` message as described below.
+
+When the player's keystroke causes them to move to a new spot, the server shall inform all clients of a change in the game grid.
 
 ### Spectator to server
 
