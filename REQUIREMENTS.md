@@ -217,10 +217,84 @@ The room at upper-left shows a passage to nowhere.
 
 ## Visibility
 
-Consider two points on the grid, *a,b* and *x,y*.
-Point *a,b* is "visible" from point *x,y* if a line drawn from *a,b* to *x,y* passes through spots only.
+Assume a player is at gridpoint *(pr,pc)*.
+Another gridpoint *(r,c)* is "visible" from point *(pr,pc)* by reviewing the *map*.
+(Only the base map affects visibility; occupants do not affect visibility.)
 
-> :x: This specification needs elaboration, because gridpoints are integer-valued and a line may pass between points. 
+ * A map gridpoint that is blank (a space) is never visible.                               
+ * A map gridpoint on the same row or column as *(pr,pc)* is visible if all intervening map gridpoints are 'spots'.                                      
+* Otherwise, we compute the mathematical line segment from *(pr,pc)* through *(r,c)*.
+Considering each row in the range *(pr...r)* and each column in the range *(pc...c)*, imagine the line segment passing between pairs of map gridpoints as it travels from *(pr,pc)* to *(r,c)*; if *both* map gridpoints of any such pair are not 'empty spots', then they block our vision and we conclude *(r,c)* is not visible.
+Only if there are no such blocking pairs do we conclude that point *(r,c)* is visible.
+* Note that gridpoint *(r,c)* itself may be an empty spot, passage spot, or boundary.
+
+Examples, from the above map.
+At game start:
+
+```
+                        ---------------+                                       
+                         ..............|                                       
+                           ............|                                       
+                            +..........|                                       
+                            |......*...#                                       
+                            |..........|                                       
+                            |....@.....|                                       
+                            |*.........|                                       
+                            +----------+                                       
+```
+
+Consider some of the line segments that may be draw toward the upper wall:
+
+![diagram with lines drawn on the above map](images/visibility.png)
+
+After moving up a few spots, the passageway became visible as we passed by, and (because it is now "known") remains displayed.
+The wall to the left is not quite visible, but the gold and spots above have become visible:
+
+```
+     +---------------------------------+                                       
+     |...*.............................|                                       
+     |.........*...*....*..............|                                       
+                            +....@.....|                                       
+                            |......*...##########                              
+                            |..........|                                       
+                            |..........|                                       
+                            |*.........|                                       
+                            +----------+                                       
+```
+
+Going up one and moving left to collect gold, the other part of the room comes into view, and the gold piles in the lower-right disappear from view:
+
+```
+     +---------------------------------+                                       
+     |...*.............................|                                       
+     |.........@.......................|                                       
+     |......+---------------+..........|                                       
+     |...                   |..........##########                              
+     |                      |..........|                                       
+                            |..........|                                       
+                            |..........|                                       
+                            +----------+                                       
+```
+
+Backtracking, and going down the passage to the corner, we can see straight up the passage and across the room beyond; the gold in the room behind us is no longer visible:
+
+```
+                                                -                              
+                                                .                              
+                                                .                              
+                                                .                              
+                                                #                              
+                                                #                              
+     +---------------------------------+        #                              
+     |.................................|        #                              
+     |.................................|        #                              
+     |......+---------------+..........|        #                              
+     |...                   |..........#########@                              
+     |                      |..........|                                       
+                            |..........|                                       
+                            |..........|                                       
+                            +----------+                                       
+```
 
 ## Network protocol
 
