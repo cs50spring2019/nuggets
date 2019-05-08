@@ -49,7 +49,7 @@ The server ***shall***
 2. Verify its arguments; if error, provide a useful error messages and exit non-zero.
 2. If the optional seed is provided, the server shall pass it to `srandom(seed)`.  If no seed is provided, the server shall use `srandom(time(NULL))` to produce random behavior.
 3. Load the designated map file; the server may assume it is [valid](#validmaps).
-4. Initialize the game by dropping `GoldMinNumPiles`-`GoldMaxNumPiles` gold piles on random empty spots.
+4. Initialize the game by dropping at least `GoldMinNumPiles` and at most `GoldMaxNumPiles` gold piles on random empty spots; each pile shall have a random number of nuggets.
 5. Initialize the network and announce the port number.
 6. Wait for messages from clients.
 7. Accept up to `MaxPlayers` players; if a player exits or quits the game, it can neither rejoin nor be replaced.
@@ -76,7 +76,7 @@ The player ***shall***
 3. If the `playername` argument is not provided, the user joins as a view-only *spectator*.
 4. Initialize ncurses.
 5. Initialize the network and join the game with a `PLAY` or `SPECTATE` message accordingly.
-6. Upon receipt of a `GRID` message, check whether the window is large enough for the grid (it should be *NR+1* x *NC+1* for best results).
+6. Upon receipt of a `GRID` message, ensure the window is large enough for the grid (it should be *NR+1* x *NC+1* for best results).
 7. Display a status line on the first line of the display, in the [protocol](#networkprotocol) below.
 8. Display the game grid on the subsequent lines of the display, as noted in the [protocol](#networkprotocol) below.
 9. Update the display any time new information arrives from the server.
@@ -312,6 +312,8 @@ The server shall send immediately to new clients, and at any time to all clients
 where the `DISPLAY` is separated from the `string` by a newline, and the `string` is literally a multi-line textual representation of the grid as known/seen by this client.
 (Indeed, if you were to just print the message string, it would be recognizable as the game map.  That's why DISPLAY ends with newline, and why the string contains an embedded newline after each row.)
 More precisely, `string` has `nrows` lines, each of which has `ncols` characters plus a newline.
+Each client receives a different version, because (a) the spectator knows all and sees all, but is not itself represented on the map, (b) players' displays show only the boundaries they know and the spots visible from their current position, and (c) the player's own position is represented by `@`.
+Note it is entirely the server's responsibility to produce these display strings.
 
 The server shall send immediately to new clients, and at any time to all clients,
 
