@@ -33,7 +33,7 @@ file.o: file.h
 ############# clean ###########
 clean:
 	rm -f core
-	rm -rf *~ *.o *.dSYM
+	rm -rf *~ *.o *.gch *.dSYM
 	rm -f *.log
 	rm -f $(LIB)
 	rm -f $(TESTS)

@@ -21,9 +21,10 @@
 #ifndef _MESSAGE_H_
 #define _MESSAGE_H_
 
+#include <stdio.h>
 #include <stdbool.h>
-#include <arpa/inet.h>
-#include <sys/select.h>
+#include <arpa/inet.h>  // These two includes are not needed for this file, 
+#include <sys/select.h> // but is needed for users of this file.
 
 /****************** types *********************/
 /* A type representing an Internet address, suitable for use in message_send().
