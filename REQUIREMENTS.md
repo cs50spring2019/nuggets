@@ -243,7 +243,7 @@ At game start:
                             +----------+                                       
 ```
 
-Consider some of the line segments that may be draw toward the upper wall:
+Consider some of the line segments that may be drawn toward the upper wall:
 
 ![diagram with lines drawn on the above map](images/visibility.png)
 
