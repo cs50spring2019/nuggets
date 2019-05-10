@@ -10,108 +10,94 @@
 #include <sys/errno.h>
 #include "log.h"
 
-/*********** global variables ****************/
-/* This is an example of a judicious use of a global variable.
- * This module stashes a file pointer(FP) for use in all the logging 
- * functions, so the module user need not pass the FP to every call.
- * One disadvantage is when these logging functions are used by many 
- * modules within a larger program; they will all log to the same file,
- * or not.  (In some instances it might be nice for them to log to separate
- * files, but this module does not support that option.)
+/**************** flog_init ****************/
+/* Initialize the logging module.
  */
-static FILE *logFP = NULL;            // open file to write log messages
-
-/**************** log_init ****************/
-/* Initialize the logging module by stashing a copy of the file pointer.
- * fp = NULL disables logging.
- */
-void log_init(FILE *fp)
+void flog_init(FILE *fp)
 {
-  logFP = fp; // cache the file pointer in our global variable
-  log_v("START OF LOG");
+  flog_v(fp, "START OF LOG");
 }
 
-/**************** log_s ****************/
+/**************** flog_s ****************/
 /* 
  * log a string to the logfile, if logging is enabled.
  * The string `format` can reference '%s' to incorporate `str`.
  */
 void
-log_s(const char *format, const char *str)
+flog_s(FILE *fp, const char *format, const char *str)
 {
-  if (logFP != NULL && format != NULL && str != NULL) {
-    fprintf(logFP, format, str);
-    fputc('\n', logFP);
-    fflush(logFP);
+  if (fp != NULL && format != NULL && str != NULL) {
+    fprintf(fp, format, str);
+    fputc('\n', fp);
+    fflush(fp);
   }
 }
 
-/**************** log_d ****************/
+/**************** flog_d ****************/
 /* 
  * log an integer to the logfile, if logging is enabled.
  * The string `format` can reference '%d' to incorporate `num`.
  */
 void
-log_d(const char *format, const int num)
+flog_d(FILE *fp, const char *format, const int num)
 {
-  if (logFP != NULL && format != NULL) {
-    fprintf(logFP, format, num);
-    fputc('\n', logFP);
-    fflush(logFP);
+  if (fp != NULL && format != NULL) {
+    fprintf(fp, format, num);
+    fputc('\n', fp);
+    fflush(fp);
   }
 }
 
-/**************** log_c ****************/
+/**************** flog_c ****************/
 /* 
  * log a character to the logfile, if logging is enabled.
  * The string `format` can reference '%c' to incorporate `ch`.
  */
 void
-log_c(const char *format, const char ch)
+flog_c(FILE *fp, const char *format, const char ch)
 {
-  if (logFP != NULL && format != NULL) {
-    fprintf(logFP, format, ch);
-    fputc('\n', logFP);
-    fflush(logFP);
+  if (fp != NULL && format != NULL) {
+    fprintf(fp, format, ch);
+    fputc('\n', fp);
+    fflush(fp);
   }
 }
 
-/**************** log_v ****************/
+/**************** flog_v ****************/
 /* 
  * log a message to the logfile, if logging is enabled.
  */
 void
-log_v(const char *str)
+flog_v(FILE *fp, const char *str)
 {
-  if (logFP != NULL && str != NULL) {
-    fputs(str, logFP);
-    fputc('\n', logFP);
-    fflush(logFP);
+  if (fp != NULL && str != NULL) {
+    fputs(str, fp);
+    fputc('\n', fp);
+    fflush(fp);
   }
 }
 
-/**************** log_e ****************/
+/**************** flog_e ****************/
 /* 
  * log an error to the logfile, if logging is enabled.
  * Expects the global variable errno (sys/errno.h) to indicate the error,
  * so this is best used immediately after a system call.
  */
 void
-log_e(const char *str)
+flog_e(FILE *fp, const char *str)
 {
-  if (logFP != NULL && str != NULL) {
-    fprintf(logFP, "%s: %s\n", str, strerror(errno));
-    fflush(logFP);
+  if (fp != NULL && str != NULL) {
+    fprintf(fp, "%s: %s\n", str, strerror(errno));
+    fflush(fp);
   }
 }
 
-/**************** logDone ****************/
+/**************** flog_done ****************/
 /* 
  * Done with logging.  Notes this, then disables logging. 
  */
 void
-log_done(void)
+flog_done(FILE *fp)
 {
-  log_v("END OF LOG");
-  logFP = NULL;
+  flog_v(fp, "END OF LOG");
 }

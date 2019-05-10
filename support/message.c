@@ -23,6 +23,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
+#include <math.h>
 #include "message.h"
 #include "log.h"
 
@@ -213,36 +214,56 @@ message_send(const addr_t to, const char *message)
 /* 
  * Loop forever, calling handler functions for stdin or socket,
  * as input is available from either.
- * Returns false on error or true on EOF in stdin.
+ * Returns false on error or true if any of the handlers return true.
  * See message.h for detailed description.
  */
 bool
-message_loop(void *arg, 
+message_loop(void *arg, const float timeout,
+	     bool (*handleTimeout)(void *arg),
 	     bool (*handleInput)  (void *arg),
              bool (*handleMessage)(void *arg, 
                                    const addr_t from, const char *buf))
 {
+  // check parameters
   if (ourSocket == 0) {
     log_v("message_loop called before message_init");
     return false; // error in usage of this function.
   }
-  if (handleInput == NULL || handleMessage == NULL) {
-    log_v("message_loop called with null handler");
-    return false; // error in usage of this function.
+
+  // set up for timeouts, if desired
+  struct timeval *timerp = NULL; // stays null if no timeout desired
+  struct timeval timer;          // timerp = &timer if timeout desired
+  struct timeval timeoutval;     // timeval equivalent of parameter 'timeout'
+  if (timeout > 0.0) {
+    timeoutval.tv_sec  = floor(timeout);
+    timeoutval.tv_usec = timeout - floor(timeout);
   }
 
+  // loop until error or some handler indicates time to quit looping
   while (true) {
     // for use with select()
     fd_set rfds;        // set of file descriptors we want to read
     
-    // Watch stdin (fd 0) and the UDP socket to see when either has input.
-    FD_ZERO(&rfds);
-    FD_SET(0, &rfds);       // stdin
-    FD_SET(ourSocket, &rfds); // the UDP socket
-    int nfds = ourSocket+1;   // highest-numbered fd in rfds
+    // Watch stdin (fd 0) and the socket to see when either has input.
+    int nfds = 0;	      // number of file descriptors to monitor
+    FD_ZERO(&rfds);	      // default to none
+    if (handleInput != NULL) {
+      FD_SET(0, &rfds);	      // monitor stdin
+      nfds = 1;
+    }
+    if (handleMessage != NULL && ourSocket != 0) {
+      FD_SET(ourSocket, &rfds); // monitor the socket
+      nfds = ourSocket+1;	// highest-numbered fd in rfds
+    }
+    if (timeout > 0.0) {      // is timeout desired?
+      timer = timeoutval;     // set the timer to the timeout value
+      timerp = &timer;	      // pass that timer to select
+    } else {
+      timerp = NULL;	      // no timeout is desired
+    }
 
     // Wait for input on either source
-    int select_response = select(nfds, &rfds, NULL, NULL, NULL);
+    int select_response = select(nfds, &rfds, NULL, NULL, timerp);
     // note: 'rfds' updated
     
     if (select_response < 0) {
@@ -250,20 +271,24 @@ message_loop(void *arg,
       log_e("message_loop: select()");
       return false; // error
     } else if (select_response == 0) {
-      // timeout occurred; this should not happen
+      // timeout occurred
       log_v("message_loop: select() timed out");
-      return false; // error
+      if (handleTimeout != NULL && (*handleTimeout)(arg)) {
+	break; // handler says to exit loop 
+      }
     } else if (select_response > 0) {
       // some data is ready on either source, or both
 
       if (FD_ISSET(0, &rfds)) {
         // stdin has input ready
-        if ((*handleInput)(arg)) {
+	log_v("message_loop: input ready on stdin");
+        if (handleInput != NULL && (*handleInput)(arg)) {
           break; // handler says to exit loop 
         }
       }
       if (FD_ISSET(ourSocket, &rfds)) {
         // socket has input ready
+	log_v("message_loop: message ready on socket");
         struct sockaddr_in sender;     // sender of this message
         struct sockaddr *senderp = (struct sockaddr *) &sender;
         socklen_t senderlen = sizeof(sender);  // must pass address to length
@@ -284,7 +309,7 @@ message_loop(void *arg,
             log_s("message_loop: from host %s", inet_ntoa(sender.sin_addr));
             log_d("message_loop: from port %d", ntohs(sender.sin_port));
             log_s("message_loop: content:\n%s\n", buf);
-            if ((*handleMessage)(arg, sender, buf)) {
+            if (handleMessage != NULL && (*handleMessage)(arg, sender, buf)) {
               break; // handler says to exit loop 
             }
           }
@@ -338,6 +363,7 @@ message_done(void)
 #ifdef UNIT_TEST
 
 #include "file.h" // for readlinep()
+static bool handleTimeout  (void *arg);
 static bool handleInput  (void *arg);
 static bool handleMessage(void *arg, const addr_t from, const char *message);
 
@@ -381,13 +407,26 @@ main(const int argc, char *argv[])
   // Loop, waiting for input or for messages; provide two callback functions.
   // We use the 'arg' parameter to carry a pointer to 'other',
   // which allows handleMessage to change it and handleInput to use it.
-  bool ok = message_loop(&other, handleInput, handleMessage);
+  bool ok = message_loop(&other, 9, handleTimeout, handleInput, handleMessage);
 
   // shut down the modules
   message_done();
   log_done();
   
   return ok? 0 : 1; // status code depends on result of message_loop
+}
+
+/**************** handleTimeout ****************/
+/* No input or message has arrived for a while.
+ * We use 'arg' to carry an addr_t referring to the 'other' correspondent.
+ * Return true if the message loop should exit, otherwise false.
+ */
+static bool
+handleTimeout(void *arg)
+{
+  const addr_t *otherp = arg;
+  message_send(*otherp, "hello?");
+  return false;
 }
 
 /**************** handleInput ****************/

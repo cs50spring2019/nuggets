@@ -5,6 +5,16 @@
  * are sent via UDP and are thus limited to UDP packet size, may be lost,
  * and may be reordered, but require no connection setup or teardown.
  * 
+ * Typical server sequence looks like this:
+ *   message_init(stderr);
+ *   message_loop(arg, timeout, handleTimeout, handleStdin, handleMessage);
+ *   message_done();
+ * Typical client sequence looks like this:
+ *   message_send(serverAddress, message); // client speaks first
+ *   message_init(stderr);
+ *   message_loop(arg, timeout, handleTimeout, handleStdin, handleMessage);
+ *   message_done();
+ *
  * David Kotz - May 2019
  */
 
@@ -106,24 +116,30 @@ void message_send(const addr_t to, const char *message);
 /* message_loop: loop, handling input and incoming messages.
  * Caller provides:
  *   a pointer for an arg (may be NULL), passed to the handler functions,
- *   a function for handling input from stdin,
- *   a function for handling an inbound message.
+ *   a time duration (in seconds) after which to call "timeout" (ignore if 0),
+ *   a function for handling a timeout (may be NULL),
+ *   a function for handling input from stdin (may be NULL),
+ *   a function for handling an inbound message (may be NULL).
  * Function returns:
  *   true, in the normal case when the loop ends due to handler return true;
  *   false, when fatal errors indicate we cannot keep looping.
  * Handlers:
+ *   handleTimeout: called when time passes without input or message.
  *   handleInput: should read once from stdin and process it.
  *   handleMessage: provided the address from which the message arrived,
  *     and a string containing the contents of the message. The handler should
  *     realize the string's memory will disappear upon return from the handler.
  *   Both are provided 'arg', passed-through untouched.
  *   Handlers should return true to terminate looping, false to keep looping.
+ * Notes:
+ *   The timeout feature is optional; use timeout=0 and handleTimeout=NULL.
  * Logs:
  *   errors in arguments,
  *   errors in monitoring stdin and/or network,
  *   sender's address and content of every message received.
  */
-bool message_loop(void *arg, 
+bool message_loop(void *arg, const float timeout,
+		  bool (*handleTimeout)(void *arg),
 		  bool (*handleInput)  (void *arg),
 		  bool (*handleMessage)(void *arg, 
 					const addr_t from, 
