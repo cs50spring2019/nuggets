@@ -80,9 +80,9 @@ The player ***shall***
 7. Display a status line on the first line of the display, in the [protocol](#networkprotocol) below.
 8. Display the game grid on the subsequent lines of the display, as noted in the [protocol](#networkprotocol) below.
 9. Update the display any time new information arrives from the server.
+9. Quit the game (by sending `KEY Q`) if reaching EOF on stdin.
 9. Quit when told to do so by the server, as noted in the [protocol](#networkprotocol) below.
 9. Display a brief note on the status line if an unknown or malformed message arrives from the server.
-10. Quit the game if reaching EOF on stdin.
 10. Print a Game-over summary and exit, as noted in the [protocol](#networkprotocol) below.
 
 The player ***should*** log useful information that can be saved in a logfile;
