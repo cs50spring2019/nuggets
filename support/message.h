@@ -10,8 +10,8 @@
  *   message_loop(arg, timeout, handleTimeout, handleStdin, handleMessage);
  *   message_done();
  * Typical client sequence looks like this:
- *   message_send(serverAddress, message); // client speaks first
  *   message_init(stderr);
+ *   message_send(serverAddress, message); // client speaks first
  *   message_loop(arg, timeout, handleTimeout, handleStdin, handleMessage);
  *   message_done();
  *
@@ -129,8 +129,8 @@ void message_send(const addr_t to, const char *message);
  *   handleInput: should read once from stdin and process it.
  *   handleMessage: provided the address from which the message arrived,
  *     and a string containing the contents of the message. The handler should
- *     realize the string's memory will disappear upon return from the handler.
- *   Both are provided 'arg', passed-through untouched.
+ *     realize the string's memory will be reused upon return from the handler.
+ *   All are provided 'arg', passed-through untouched.
  *   Handlers should return true to terminate looping, false to keep looping.
  * Notes:
  *   The timeout feature is optional; use timeout=0 and handleTimeout=NULL.
