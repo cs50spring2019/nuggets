@@ -34,8 +34,11 @@ The Makefile of that main directory might then include content like this:
 S = support
 CFLAGS = ... -I$S
 LLIBS = $S/support.a
+LIBS =
 ...
 program.o: ... $S/message.h $S/log.h
+program: program.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 ...
 $S/support.a:
 	make -C $S support.a

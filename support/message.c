@@ -235,8 +235,8 @@ message_loop(void *arg, const float timeout,
   struct timeval timer;          // timerp = &timer if timeout desired
   struct timeval timeoutval;     // timeval equivalent of parameter 'timeout'
   if (timeout > 0.0) {
-    timeoutval.tv_sec  = floor(timeout);
-    timeoutval.tv_usec = timeout - floor(timeout);
+    timeoutval.tv_sec  = (int)timeout;
+    timeoutval.tv_usec = timeout - (int)timeout;
   }
 
   // loop until error or some handler indicates time to quit looping
