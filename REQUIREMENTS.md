@@ -413,6 +413,7 @@ The server sends, at any time,
 	
 where `summary` shall be a printable, multi-line string summarizing the purses of the game.
 The summary shall include one line per player, with player Letter, purse (gold nugget count), and player real name, in tabular form.
+All players who ever joined, including any who may have quit earlier, should be included in the summary.
 After receiving a `GAMEOVER` message the client shall print the summary and shall exit.
 
 The server *may* send, in response to the client,
