@@ -55,6 +55,7 @@ The server ***shall***
 7. Accept up to `MaxPlayers` players; if a player exits or quits the game, it can neither rejoin nor be replaced.
 8. Accept up to 1 spectator; if a new spectator joins while one is active, the server shall tell the current spectator to quit, and the server shall then forget that current spectator.
 7. React to each type of inbound message as described in the [protocol](#networkprotocol) below.
+8. If a player quits the game, that player's symbol is removed from the map.
 8. Update all clients whenever any player moves or gold is collected.
 8. Monitor the number of gold nuggets remaining; when it reaches zero, the server shall send a `GAMEOVER` message to all clients, print the Game-over summary, and exit.
 
