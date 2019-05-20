@@ -140,11 +140,11 @@ void message_send(const addr_t to, const char *message);
  *   sender's address and content of every message received.
  */
 bool message_loop(void *arg, const float timeout,
-		  bool (*handleTimeout)(void *arg),
-		  bool (*handleInput)  (void *arg),
-		  bool (*handleMessage)(void *arg, 
-					const addr_t from, 
-					const char *message));
+                  bool (*handleTimeout)(void *arg),
+                  bool (*handleInput)  (void *arg),
+                  bool (*handleMessage)(void *arg, 
+                                        const addr_t from, 
+                                        const char *message));
 
 /******************************************/
 /* message_done: shut down the module.

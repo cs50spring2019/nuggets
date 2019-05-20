@@ -205,7 +205,7 @@ message_send(const addr_t to, const char *message)
     return; // error in usage of this function.
   }
   if (sendto(ourSocket, message, strlen(message), 0,
-	     (struct sockaddr *) &to, sizeof(to)) < 0) {
+             (struct sockaddr *) &to, sizeof(to)) < 0) {
     log_e("message_send: error sending to datagram socket");
   }
 }
@@ -219,14 +219,28 @@ message_send(const addr_t to, const char *message)
  */
 bool
 message_loop(void *arg, const float timeout,
-	     bool (*handleTimeout)(void *arg),
-	     bool (*handleInput)  (void *arg),
+             bool (*handleTimeout)(void *arg),
+             bool (*handleInput)  (void *arg),
              bool (*handleMessage)(void *arg, 
                                    const addr_t from, const char *buf))
 {
-  // check parameters
+  // check if we're ready for messaging
   if (ourSocket == 0) {
     log_v("message_loop called before message_init");
+    return false; // error in usage of this function.
+  }
+
+  // check parameters
+  if (handleTimeout == NULL && handleInput == NULL && handleMessage == NULL) {
+    log_v("message_loop called with all handlers null");
+    return false; // error in usage of this function.
+  }
+  if (handleTimeout == NULL && timeout > 0.0) {
+    log_v("message_loop called with null handleTimeout but timeout > 0");
+    return false; // error in usage of this function.
+  }
+  if (handleTimeout != NULL && timeout <= 0.0) {
+    log_v("message_loop called with Timeout handler but timeout <= 0");
     return false; // error in usage of this function.
   }
 
@@ -245,21 +259,21 @@ message_loop(void *arg, const float timeout,
     fd_set rfds;        // set of file descriptors we want to read
     
     // Watch stdin (fd 0) and the socket to see when either has input.
-    int nfds = 0;	      // number of file descriptors to monitor
-    FD_ZERO(&rfds);	      // default to none
+    int nfds = 0;             // number of file descriptors to monitor
+    FD_ZERO(&rfds);           // default to none
     if (handleInput != NULL) {
-      FD_SET(0, &rfds);	      // monitor stdin
+      FD_SET(0, &rfds);       // monitor stdin
       nfds = 1;
     }
     if (handleMessage != NULL && ourSocket != 0) {
       FD_SET(ourSocket, &rfds); // monitor the socket
-      nfds = ourSocket+1;	// highest-numbered fd in rfds
+      nfds = ourSocket+1;       // highest-numbered fd in rfds
     }
     if (timeout > 0.0) {      // is timeout desired?
       timer = timeoutval;     // set the timer to the timeout value
-      timerp = &timer;	      // pass that timer to select
+      timerp = &timer;        // pass that timer to select
     } else {
-      timerp = NULL;	      // no timeout is desired
+      timerp = NULL;          // no timeout is desired
     }
 
     // Wait for input on either source
@@ -274,21 +288,21 @@ message_loop(void *arg, const float timeout,
       // timeout occurred
       log_v("message_loop: select() timed out");
       if (handleTimeout != NULL && (*handleTimeout)(arg)) {
-	break; // handler says to exit loop 
+        break; // handler says to exit loop 
       }
     } else if (select_response > 0) {
       // some data is ready on either source, or both
 
       if (FD_ISSET(0, &rfds)) {
         // stdin has input ready
-	log_v("message_loop: input ready on stdin");
+        log_v("message_loop: input ready on stdin");
         if (handleInput != NULL && (*handleInput)(arg)) {
           break; // handler says to exit loop 
         }
       }
       if (FD_ISSET(ourSocket, &rfds)) {
         // socket has input ready
-	log_v("message_loop: message ready on socket");
+        log_v("message_loop: message ready on socket");
         struct sockaddr_in sender;     // sender of this message
         struct sockaddr *senderp = (struct sockaddr *) &sender;
         socklen_t senderlen = sizeof(sender);  // must pass address to length
