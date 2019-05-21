@@ -16,11 +16,12 @@ The game ends when all gold nuggets have been collected by some player.
 * There are zero to `MaxPlayers` players, and zero or one *spectators*.
 * A new *player* is dropped into a random empty spot within a room.
 * A new player initially has 0 nuggets in its *purse*.
-* A player can *see* only those spots that are [*visible*](#visibility) from its current location. 
-* A player can *know* the boundaries of all rooms and passages it has seen since the player began playing.
+* A player can *see* the spots and boundaries that are [*visible*](#visibility) from its current location.
+* A player can *see* the occupants of only those spots that are [*visible*](#visibility) from its current location.
+* A player can *know* the spots and boundaries of all rooms and passages it has seen since the player began playing.
 * The spectator immediately *knows* and always *sees* all gridpoints. 
 * The *display* is an ASCII screen large enough to represent the entire grid.
-* At any given time, a player's display illustrates all known boundaries and all visible spots; the spectator's display illustrates all boundaries and spots.
+* At any given time, a player's display illustrates all known gridpoints and visible occupants; the spectator's display illustrates all gridpoints and all occupants.
 * A player moving into a spot containing a pile of gold *collects* that gold, adding all the pile's nuggets to the player's purse. The pile is then gone.
 * A player moving into a spot occupied by another player causes the two players to switch places.
 * The game *ends* when all gold nuggets have been collected.
@@ -51,7 +52,7 @@ The server ***shall***
 3. Load the designated map file; the server may assume it is [valid](#validmaps).
 4. Initialize the game by dropping at least `GoldMinNumPiles` and at most `GoldMaxNumPiles` gold piles on random empty spots; each pile shall have a random number of nuggets.
 5. Initialize the network and announce the port number.
-6. Wait for messages from clients.
+6. Wait for messages from *clients* (players or spectators).
 7. Accept up to `MaxPlayers` players; if a player exits or quits the game, it can neither rejoin nor be replaced.
 8. Accept up to 1 spectator; if a new spectator joins while one is active, the server shall tell the current spectator to quit, and the server shall then forget that current spectator.
 7. React to each type of inbound message as described in the [protocol](#networkprotocol) below.
