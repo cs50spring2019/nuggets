@@ -48,6 +48,13 @@ static const int MaxPort = 65535;
  */
 static int ourSocket = 0;     // socket on which to receive messages
 
+/**************** file-local functions ****************/
+/* stringAddr: format a string representation of an address.
+ * Returns pointer to static storage and thus should not be retained.
+ */
+static const char *stringAddr(const addr_t addr);
+
+
 /***********************************************************************/
 /**************** message_init ****************/
 /* 
@@ -156,7 +163,7 @@ bool
 message_setAddr(const char *hostname, const char *portString, addr_t *addr)
 {
   if (hostname == NULL || portString == NULL || addr == NULL) {
-    log_v("message_setAddr called with NULL argument");
+    log_v("message_setAddr: called with NULL argument");
     return false;
   }
   
@@ -188,6 +195,54 @@ message_setAddr(const char *hostname, const char *portString, addr_t *addr)
   return true;
 }
 
+/**************** stringAddr ****************/
+/*
+ * Produce a string representation of the address.
+ * Returns pointer to static storage and thus should not be retained.
+ */
+static const char *
+stringAddr(const addr_t addr)
+{
+  // Maximum string length to hold an IP address and port, plus null.
+  // e.g., 255.255.255.255:65507
+  static char addrString[22]; // constant appears in snprintf below
+
+  snprintf(addrString, 22, "%s:%05d",
+	   inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+
+  return addrString;
+}
+
+/**************** numLines ****************/
+/*
+ * Return number of lines needed to print the string:
+ * 0 if string is NULL or empty;
+ * Otherwise return number of newline characters,
+ *  plus 1 if string does not end with newline.
+ */
+static const int
+numLines(const char *string)
+{
+  if (string == NULL || *string == '\0') {
+    // string is null or empty
+    return 0;
+  } else {
+    // string is not empty; count newlines
+    int n = 0;
+    const char *p;
+    for (p = string; *p != '\0'; p++) {
+      if (*p == '\n') {
+	n++;
+      }
+    }
+    // if the string does not end with newline, count the partial line
+    if (*(p-1) != '\n') {
+      n++;
+    }
+    return n;
+  }
+}
+
 /**************** message_send ****************/
 /* 
  * Send a string message to the correspondent address.
@@ -197,16 +252,20 @@ void
 message_send(const addr_t to, const char *message)
 {
   if (ourSocket == 0) {
-    log_v("message_send called before message_init");
+    log_v("message_send: called before message_init");
     return; // error in usage of this function.
   }
   if (message == NULL) {
-    log_v("message_send called with null message");
+    log_v("message_send: called with null message");
     return; // error in usage of this function.
   }
   if (sendto(ourSocket, message, strlen(message), 0,
              (struct sockaddr *) &to, sizeof(to)) < 0) {
     log_e("message_send: error sending to datagram socket");
+  } else {
+    log_s("message_send: TO %s", stringAddr(to));
+    log_d("message_send: %d lines:", numLines(message));
+    log_s("%s", message);
   }
 }
 
@@ -319,10 +378,12 @@ message_loop(void *arg, const float timeout,
             // ignore it
             log_d("message_loop: non-Internet family %d\n", sender.sin_family);
           } else {
+	    // record it
+	    log_s("message_loop: FROM %s", stringAddr(sender));
+	    log_d("message_loop: %d lines:", numLines(buf));
+	    log_s("%s", buf);
+
             // handle it
-            log_s("message_loop: from host %s", inet_ntoa(sender.sin_addr));
-            log_d("message_loop: from port %d", ntohs(sender.sin_port));
-            log_s("message_loop: content:\n%s\n", buf);
             if (handleMessage != NULL && (*handleMessage)(arg, sender, buf)) {
               break; // handler says to exit loop 
             }
