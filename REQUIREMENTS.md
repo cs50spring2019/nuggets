@@ -12,9 +12,10 @@ The object of the game is to collect more gold nuggets than any other player.
 The game ends when all gold nuggets have been collected by some player.
 
 * Game play occurs in a set of interconnected *rooms* and *passages*, as defined by a [map](#maps).
+* Gridpoints within a room or passage are called *spots*.  A *room spot* can be occupied by a player or a gold pile, or be empty.  A *passage spot* can be occupied by a player or be empty.
 * At game start time, `GoldTotal` nuggets are randomly dropped in a random number of random-sized piles, at some spot in a room.  Gold nuggets are indistinguishable; a pile contains at least one nugget.
 * There are zero to `MaxPlayers` players, and zero or one *spectators*.
-* A new *player* is dropped into a random empty spot within a room.
+* A new *player* is dropped into a randomly selected empty room spot.
 * A new player initially has 0 nuggets in its *purse*.
 * A player can *see* the spots and boundaries that are [*visible*](#visibility) from its current location.
 * A player can *see* the occupants of only those spots that are [*visible*](#visibility) from its current location.
@@ -50,7 +51,7 @@ The server ***shall***
 2. Verify its arguments; if error, provide a useful error messages and exit non-zero.
 2. If the optional seed is provided, the server shall pass it to `srandom(seed)`.  If no seed is provided, the server shall use `srandom(time(NULL))` to produce random behavior.
 3. Load the designated map file; the server may assume it is [valid](#validmaps).
-4. Initialize the game by dropping at least `GoldMinNumPiles` and at most `GoldMaxNumPiles` gold piles on random empty spots; each pile shall have a random number of nuggets.
+4. Initialize the game by dropping at least `GoldMinNumPiles` and at most `GoldMaxNumPiles` gold piles on random room spots; each pile shall have a random number of nuggets.
 5. Initialize the network and announce the port number.
 6. Wait for messages from *clients* (players or spectators).
 7. Accept up to `MaxPlayers` players; if a player exits or quits the game, it can neither rejoin nor be replaced.
@@ -119,8 +120,8 @@ The remaining *NR* lines present the grid using *map characters:*
  * `-` a horizontal boundary
  * `|` a vertical boundary
  * `+` a corner boundary
- * `.` an empty spot
- * `#` a passage spot
+ * `.` an empty room spot
+ * `#` an empty passage spot
 
 or *occupant characters:*
 
