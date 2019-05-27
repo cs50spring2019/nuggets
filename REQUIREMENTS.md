@@ -13,7 +13,7 @@ The game ends when all gold nuggets have been collected by some player.
 
 * Game play occurs in a set of interconnected *rooms* and *passages*, as defined by a [map](#maps).
 * Gridpoints within a room or passage are called *spots*.  A *room spot* can be occupied by a player or a gold pile, or be empty.  A *passage spot* can be occupied by a player or be empty.
-* At game start time, `GoldTotal` nuggets are randomly dropped in a random number of random-sized piles, at some spot in a room.  Gold nuggets are indistinguishable; a pile contains at least one nugget.
+* At game start time, `GoldTotal` nuggets are randomly dropped in a random number of random-sized piles, each pile at some spot in a room.  Gold nuggets are indistinguishable; a pile contains at least one nugget.
 * There are zero to `MaxPlayers` players, and zero or one *spectators*.
 * A new *player* is dropped into a randomly selected empty room spot.
 * A new player initially has 0 nuggets in its *purse*.
@@ -228,7 +228,7 @@ Another gridpoint *(r,c)* is "visible" from point *(pr,pc)* by reviewing the *ma
  * A map gridpoint that is blank (a space) is never visible.                               
  * A map gridpoint on the same row or column as *(pr,pc)* is visible if all intervening map gridpoints are 'spots'.                                      
 * Otherwise, we compute the mathematical line segment from *(pr,pc)* through *(r,c)*.
-Considering each row in the range *(pr...r)* and each column in the range *(pc...c)*, imagine the line segment passing between pairs of map gridpoints as it travels from *(pr,pc)* to *(r,c)*; if *both* map gridpoints of any such pair are not 'empty spots', then they block our vision and we conclude *(r,c)* is not visible.
+Considering each row in the range *(pr...r)* and each column in the range *(pc...c)*, imagine the line segment as it travels from *(pr,pc)* to *(r,c)*; if the line segment intersects a gridpoint exactly, and that gridpoint is not an 'empty spot', then it blocks the player's vision; if the line segment passes *between* pairs of map gridpoints and if *both* those gridpoints are not 'empty spots', then they block the player's vision; if the player's vision is blocked, we conclude *(r,c)* is not visible.
 Only if there are no such blocking pairs do we conclude that point *(r,c)* is visible.
 * Note that gridpoint *(r,c)* itself may be an empty spot, passage spot, or boundary.
 
