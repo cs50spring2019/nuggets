@@ -420,10 +420,11 @@ After receiving a `GAMEOVER` message the client shall print the summary and shal
 
 The server *may* send, in response to the client,
 
-	NO ...
+	NO [explanation]
 
 to indicate it was unable to understand or handle the client's prior message.
 The remainder of the line, if present, provides a short explanatory text.
+(The brackets `[]` above are not part of the message; they indicate that the explanation is optional.)
 The client shall present this text to its user on the display's status line.
 
 ## Inspiration
